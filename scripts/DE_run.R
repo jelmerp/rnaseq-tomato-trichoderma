@@ -7,9 +7,6 @@ packages <- c("DESeq2",          # Differential expression analysis
               "apeglm")
 pacman::p_load(char = packages)
 
-# Load function from separate script
-source("scripts/DE_fun.R")
-
 # Load the data
 count_table_file <- here("results/count/counts.txt")
 metadata_file <- here("metadata/metadata.txt")
@@ -19,6 +16,38 @@ outdir <- here("results/DE/")
 plotdir <- here("results/DE/fig/")
 if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
 if (!dir.exists(plotdir)) dir.create(plotdir, recursive = TRUE)
+
+
+# FUNCTIONS --------------------------------------------------------------------
+sig_contrast <- function(my_contrast, dds, outdir, level_prefix) {
+
+  contrast_full <- paste0(level_prefix, "_", my_contrast)
+
+  ## Write all results:
+  res <- results(dds,
+                 contrast = c("group", my_contrast)) %>%
+    as.data.frame() %>%
+    rownames_to_column("gene_id") %>%
+    mutate(level1 = contrast_full[1],
+           level2 = contrast_full[2])
+
+  contrast_pasted <- paste0(contrast_full, collapse = "_vs_")
+  outfile <- file.path(outdir, paste0(contrast_pasted, '_all-genes.txt'))
+  write_tsv(res, outfile)
+
+  ## Write significant results:
+  res_sig <- res %>% dplyr::filter(padj < 0.1)
+
+  cat(my_contrast[1], "versus", my_contrast[2], ":", nrow(res_sig), "significant\n")
+
+  if(nrow(res_sig > 0)) {
+    contrast_pasted <- paste0(contrast_full, collapse = "_vs_")
+    outfile <- file.path(outdir, paste0(contrast_pasted, '_DEgenes.txt'))
+    write_tsv(res_sig, outfile)
+  }
+
+  return(res_sig)
+}
 
 
 # PREPARE DATA -----------------------------------------------------------------

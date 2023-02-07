@@ -62,27 +62,3 @@ run_kegg <- function(comp, DE_direction, test_type = "DE",
   cat("Number of enriched pathways:", nrow(kegg_res), "\n")
   return(kegg_res)
 }
-
-## Heatmap-style plot for significant GO categories
-kegg_plot <- function(kegg_res, x_var = "timepoint",
-                      title = NULL, xlabs = NULL) {
-
-  full_title <- paste0("Over-represented KEGG pathways: ", title)
-
-  p <- kegg_res %>%
-    ggplot(aes_string(x_var, "pathway_description", fill = "p.adjust")) +
-    geom_tile(stat = "identity", size = 0.25, color = "grey20") +
-    scale_fill_distiller(palette = "Blues") +
-    labs(fill = "adjusted\np-value",
-         title = full_title) +
-    scale_y_discrete(position = "right") +
-    theme_minimal() +
-    theme(legend.position = "left",
-          axis.title = element_blank(),
-          panel.grid = element_blank())
-
-  if(!is.null(xlabs)) p <- p + scale_x_discrete(labels = xlabs)
-
-  print(p)
-  return(p)
-}
